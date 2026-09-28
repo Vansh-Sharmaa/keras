@@ -449,6 +449,22 @@ class LayerTest(testing.TestCase):
         self.assertLen(layer.variables, 9)
         self.assertLen(layer.weights, 8)
 
+    def test_layer_untracking_on_delattr(self):
+        inputs = layers.Input((4,))
+        model = models.Model(inputs, layers.Dense(4)(inputs))
+        self.assertLen(model.weights, 2)
+        self.assertEqual(model.count_params(), 20)
+
+        helper = layers.Dense(3)
+        helper.build((None, 4))
+        model.helper = helper
+        self.assertLen(model.weights, 4)
+        self.assertEqual(model.count_params(), 35)
+
+        del model.helper
+        self.assertLen(model.weights, 2)
+        self.assertEqual(model.count_params(), 20)
+
     def test_metric_tracking(self):
         class LayerWithMetric(layers.Layer):
             def __init__(self, units):

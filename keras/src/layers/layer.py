@@ -1670,6 +1670,13 @@ class Layer(BackendLayer, Operation):
             self._tracker.lock()
         self._post_untrack_variable(variable)
 
+    def _untrack_layer(self, layer):
+        previous_lock_state = self._tracker.locked
+        self._tracker.unlock()
+        self._tracker.untrack(layer)
+        if previous_lock_state is True:
+            self._tracker.lock()
+
     def add_metric(self, *args, **kwargs):
         # Permanently disabled
         raise NotImplementedError(
@@ -1825,6 +1832,9 @@ class Layer(BackendLayer, Operation):
             self._untrack_variable(obj)
             super().__delattr__(name)
             gc.collect()
+        elif isinstance(obj, Layer):
+            self._untrack_layer(obj)
+            super().__delattr__(name)
         else:
             super().__delattr__(name)
 
